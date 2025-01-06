@@ -14,6 +14,13 @@ const int ledPin = 22;
 // Stores LED state
 String ledState;
 
+// Set stepper motor pins
+const int stepPin1 = 12;
+const int dirPin1 = 14;
+const int stepPin2 = 26;
+const int dirPin2 = 27;
+const int  steps_per_rev = 42;
+
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
@@ -37,6 +44,10 @@ void setup(){
   // Serial port for debugging purposes
   Serial.begin(115200);
   pinMode(ledPin, OUTPUT);
+  pinMode(stepPin1, OUTPUT);
+  pinMode(dirPin1, OUTPUT);
+  pinMode(stepPin2, OUTPUT);
+  pinMode(dirPin2, OUTPUT);
 
   // Initialize SPIFFS
   if(!SPIFFS.begin(true)){
@@ -102,5 +113,56 @@ void setup(){
 }
  
 void loop(){
-  
+  // motor 1
+  digitalWrite(dirPin1, HIGH);
+  Serial.println("Spinning Clockwise...");
+
+
+  for (int i = 0; i < steps_per_rev; i++)
+  {
+    digitalWrite(stepPin1, HIGH);
+    delay(10);
+    digitalWrite(stepPin1, LOW);
+    delay(10);
+  }
+  delay(1000);
+
+  digitalWrite(dirPin1, LOW);
+  Serial.println("Spinning Anti-Clockwise...");
+
+  for (int i = 0; i < steps_per_rev; i++)
+  {
+    digitalWrite(stepPin1, HIGH);
+    delay(10);
+    digitalWrite(stepPin1, LOW);
+    delay(10);
+  }
+  delay(1000);
+
+
+  // motor 2
+  digitalWrite(dirPin2, HIGH);
+  Serial.println("Spinning Clockwise 2...");
+
+
+  for (int i = 0; i < steps_per_rev; i++)
+  {
+    digitalWrite(stepPin2, HIGH);
+    delay(10);
+    digitalWrite(stepPin2, LOW);
+    delay(10);
+  }
+  delay(1000);
+
+  digitalWrite(dirPin2, LOW);
+  Serial.println("Spinning Anti-Clockwise 2...");
+
+  for (int i = 0; i < steps_per_rev; i++)
+  {
+    digitalWrite(stepPin2, HIGH);
+    delay(10);
+    digitalWrite(stepPin2, LOW);
+    delay(10);
+  }
+  delay(1000);  
 }
