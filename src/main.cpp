@@ -1,13 +1,3 @@
-/*********
-  Rui Santos
-  Complete project details at https://randomnerdtutorials.com
-*********/
-
-// Import required libraries
-// #include "WiFi.h"
-// #include "WifiManager.h"
-// #include "ESPAsyncWebServer.h"
-// #include "SPIFFS.h"
 #include <AccelStepper.h>
 #include <MultiStepper.h>
 
@@ -32,31 +22,7 @@ const int dirPin2 = 27;
 // Create stepper objects
 AccelStepper stepper1(AccelStepper::DRIVER, stepPin1, dirPin1);
 AccelStepper stepper2(AccelStepper::DRIVER, stepPin2, dirPin2);
-
 MultiStepper steppers;
-
-// // Create AsyncWebServer object on port 80
-// AsyncWebServer server(80);
-
-// Replaces placeholder with LED state value
-// String processor(const String &var)
-// {
-//   Serial.println(var);
-//   if (var == "STATE")
-//   {
-//     if (digitalRead(ledPin))
-//     {
-//       ledState = "ON";
-//     }
-//     else
-//     {
-//       ledState = "OFF";
-//     }
-//     Serial.print(ledState);
-//     return ledState;
-//   }
-//   return String();
-// }
 
 void set_target_position(int x, int y)
 {
@@ -105,7 +71,6 @@ void setup()
   stepper2.setMaxSpeed(50);
   stepper2.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
   stepper2.setAcceleration(10);
-  // stepper1.setSpeed(50);
 
   steppers.addStepper(stepper1);
   steppers.addStepper(stepper2);

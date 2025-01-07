@@ -1,3 +1,31 @@
+// #include "WiFi.h"
+// #include "WifiManager.h"
+// #include "ESPAsyncWebServer.h"
+// #include "SPIFFS.h"
+
+
+// // Create AsyncWebServer object on port 80
+// AsyncWebServer server(80);
+
+// Replaces placeholder with LED state value
+// String processor(const String &var)
+// {
+//   Serial.println(var);
+//   if (var == "STATE")
+//   {
+//     if (digitalRead(ledPin))
+//     {
+//       ledState = "ON";
+//     }
+//     else
+//     {
+//       ledState = "OFF";
+//     }
+//     Serial.print(ledState);
+//     return ledState;
+//   }
+//   return String();
+// }
 
   // // Initialize SPIFFS
   // if(!SPIFFS.begin(true)){
