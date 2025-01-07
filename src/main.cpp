@@ -4,11 +4,14 @@
 *********/
 
 // Import required libraries
-#include "WiFi.h"
-#include "WifiManager.h"
-#include "ESPAsyncWebServer.h"
-#include "SPIFFS.h"
+// #include "WiFi.h"
+// #include "WifiManager.h"
+// #include "ESPAsyncWebServer.h"
+// #include "SPIFFS.h"
 #include <AccelStepper.h>
+#include <MultiStepper.h>
+
+#include "inverse_kin.h"
 
 // Set LED GPIO
 const int ledPin = 22;
@@ -22,34 +25,65 @@ const int stepPin2 = 26;
 const int dirPin2 = 27;
 
 // Stepper motor configuration
-const int steps_per_rev = 200;
-const float stepperGearRatio = 1.8;
+#define STEPS_PER_REV 200
+#define STEPPER_GEAR_RATIO 1.8
 
 // Create stepper objects
 AccelStepper stepper1(AccelStepper::DRIVER, stepPin1, dirPin1);
 AccelStepper stepper2(AccelStepper::DRIVER, stepPin2, dirPin2);
 
-// Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
+MultiStepper steppers;
+
+// // Create AsyncWebServer object on port 80
+// AsyncWebServer server(80);
 
 // Replaces placeholder with LED state value
-String processor(const String &var)
+// String processor(const String &var)
+// {
+//   Serial.println(var);
+//   if (var == "STATE")
+//   {
+//     if (digitalRead(ledPin))
+//     {
+//       ledState = "ON";
+//     }
+//     else
+//     {
+//       ledState = "OFF";
+//     }
+//     Serial.print(ledState);
+//     return ledState;
+//   }
+//   return String();
+// }
+
+void set_target_position(MotorAngles angles)
 {
-  Serial.println(var);
-  if (var == "STATE")
-  {
-    if (digitalRead(ledPin))
-    {
-      ledState = "ON";
-    }
-    else
-    {
-      ledState = "OFF";
-    }
-    Serial.print(ledState);
-    return ledState;
-  }
-  return String();
+  // add 0.5 for rounding
+  int steps_1 = -(angles.t1 * 180 / PI * STEPS_PER_REV * STEPPER_GEAR_RATIO / 360 + 0.5);
+  int steps_2_compensation = (steps_1 / STEPPER_GEAR_RATIO + 0.5);
+  int steps_2_position = -(angles.t2 * 180 / PI * STEPS_PER_REV * STEPPER_GEAR_RATIO / 360 + 0.5);
+
+  int steps_2 = steps_2_position + steps_2_compensation;
+  Serial.println(steps_1);
+
+  Serial.printf("steps_1: %d\n", steps_1);
+  Serial.printf("steps_2: %d\n", steps_2);
+
+  long steps[2];
+  steps[0] = steps_1;
+  steps[1] = steps_2;
+  steppers.moveTo(steps);
+}
+
+void new_coordinate(int x, int y){
+    Coordinate coord;
+    coord.x = x;
+    coord.y = y;
+    Serial.println(coord_to_angles(coord).t1);
+    Serial.println(coord_to_angles(coord).t2);
+
+    set_target_position(coord_to_angles(coord));
 }
 
 void setup()
@@ -62,80 +96,35 @@ void setup()
   pinMode(stepPin2, OUTPUT);
   pinMode(dirPin2, OUTPUT);
 
-  // // Initialize SPIFFS
-  // if(!SPIFFS.begin(true)){
-  //   Serial.println("An Error has occurred while mounting SPIFFS");
-  //   return;
-  // }
-
-  // // wifi setup
-  // WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
-  // //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
-  // WiFiManager wm;
-
-  // // reset settings - wipe stored credentials for testing
-  // // these are stored by the esp library
-  // //wm.resetSettings();
-
-  // // Automatically connect using saved credentials,
-  // // if connection fails, it starts an access point with the specified name ( "AutoConnectAP"),
-  // // if empty will auto generate SSID, if password is blank it will be anonymous AP (wm.autoConnect())
-  // // then goes into a blocking loop awaiting configuration and will return success result
-
-  // bool res;
-  // // res = wm.autoConnect(); // auto generated AP name from chipid
-  // // res = wm.autoConnect("AutoConnectAP"); // anonymous ap
-  // res = wm.autoConnect("AutoConnectAP","password"); // password protected ap
-
-  // if(!res) {
-  //     Serial.println("Failed to connect");
-  //     // ESP.restart();
-  // }
-  // else {
-  //     //if you get here you have connected to the WiFi
-  //     Serial.println("Connected to wifi");
-  // }
-
-  // // Print ESP32 Local IP Address
-  // Serial.println(WiFi.localIP());
-
-  // // Route for root / web page
-  // server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-  //   request->send(SPIFFS, "/index.html", String(), false, processor);
-  // });
-
-  // // Route to load style.css file
-  // server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
-  //   request->send(SPIFFS, "/style.css", "text/css");
-  // });
-
-  // // Route to set GPIO to HIGH
-  // server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request){
-  //   digitalWrite(ledPin, HIGH);
-  //   request->send(SPIFFS, "/index.html", String(), false, processor);
-  // });
-
-  // // Route to set GPIO to LOW
-  // server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request){
-  //   digitalWrite(ledPin, LOW);
-  //   request->send(SPIFFS, "/index.html", String(), false, processor);
-  // });
-
-  // // Start server
-  // server.begin();
-  stepper1.setMaxSpeed(100);
-  stepper1.moveTo(steps_per_rev * stepperGearRatio);
+  stepper1.setMaxSpeed(50);
+  stepper1.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
   stepper1.setAcceleration(10);
 
-  stepper2.setMaxSpeed(100);
-  stepper2.moveTo(steps_per_rev * stepperGearRatio);
+  stepper2.setMaxSpeed(50);
+  stepper2.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
   stepper2.setAcceleration(10);
   // stepper1.setSpeed(50);
+
+
+  steppers.addStepper(stepper1);
+  steppers.addStepper(stepper2);
 }
 
 void loop()
 {
-  stepper2.run();
-  Serial.println(stepper2.currentPosition());
-  delay(10);
+  new_coordinate(0, 30);
+  steppers.runSpeedToPosition();
+
+  delay(2000);
+
+  new_coordinate(-15, 0);
+  steppers.runSpeedToPosition();
+
+  delay(2000);
+
+
+  new_coordinate(30, 0);
+  steppers.runSpeedToPosition();
+
+  delay(2000);
 }

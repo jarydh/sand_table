@@ -1,17 +1,4 @@
-#include <Arduino.h>
-#include <stdio.h>
-
-typedef struct
-{
-    float x;
-    float y;
-} Coordinate;
-
-typedef struct
-{
-    float t1;
-    float t2;
-} MotorAngles;
+#include "inverse_kin.h"
 
 int L = 15; // cm
 
@@ -27,15 +14,4 @@ MotorAngles coord_to_angles(Coordinate c){
     
     
     return res;
-}
-
-int main(){
-    Coordinate target;
-    target.x = 30;
-    target.y = 0;
-
-    MotorAngles result = coord_to_angles(target);
-
-    printf("%f\n", result.t1);
-    printf("%f\n", result.t2);
 }
