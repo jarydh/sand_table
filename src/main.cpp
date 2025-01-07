@@ -54,6 +54,17 @@ void set_target_position(int x, int y)
   steppers.moveTo(steps);
 }
 
+void execute()
+{
+  set_target_position(0, 30);
+  steppers.runSpeedToPosition();
+
+  delay(2000);
+
+  set_target_position(15, 15);
+  steppers.runSpeedToPosition();
+}
+
 void setup()
 {
   // Serial port for debugging purposes
@@ -74,22 +85,14 @@ void setup()
 
   steppers.addStepper(stepper1);
   steppers.addStepper(stepper2);
-}
 
-void loop()
-{
-  set_target_position(0, 30);
-  steppers.runSpeedToPosition();
+  Serial.println("done setup, executing movements in 2 seconds:");
 
   delay(2000);
 
-  set_target_position(15, 15);
-  steppers.runSpeedToPosition();
+  execute();
 
-  delay(2000);
-
-  // set_target_position(30, 0);
-  // steppers.runSpeedToPosition();
-
-  // delay(2000);
+  Serial.println("done executing movements.");
 }
+
+void loop() {}
