@@ -50,8 +50,7 @@ void go_to(int x, int y)
 // executed on startup after setup() as a script
 void execute()
 {
-
-  File f = SPIFFS.open("/style.css");
+  File f = SPIFFS.open("/positions.in");
 
   while (f.available())
   {
@@ -60,7 +59,6 @@ void execute()
 
     if (sscanf(line.c_str(), "%d,%d", &x, &y) == 2)
     {
-      Serial.printf("Parsed values: %d, %d\n", x, y);
       go_to(x, y);
       delay(2000);
     }
@@ -81,7 +79,6 @@ void setup()
   pinMode(STEP_PIN_2, OUTPUT);
   pinMode(DIR_PIN_2, OUTPUT);
 
-  // Initialize SPIFFS
   if (!SPIFFS.begin(true))
   {
     Serial.println("An Error has occurred while mounting SPIFFS");
