@@ -11,10 +11,10 @@
 #define SERIAL_PORT 115200
 
 #define STEPS_PER_REV 200
-#define STEPS_PER_DEGREE -1
+// #define STEPS_PER_DEGREE -1
 #define STEPPER_GEAR_RATIO 1.8
 
-#define START_POSITION 30, 0
+#define START_POSITION -30, 0
 
 AccelStepper stepper1(AccelStepper::DRIVER, STEP_PIN_1, DIR_PIN_1);
 AccelStepper stepper2(AccelStepper::DRIVER, STEP_PIN_2, DIR_PIN_2);
@@ -22,8 +22,8 @@ MultiStepper steppers;
 
 long *angles_to_steps(MotorAngles angles)
 {
-  long pos_1 = round(angles.a1 * STEPS_PER_DEGREE);
-  long pos_2 = round(angles.a2 * STEPS_PER_DEGREE + pos_1 / STEPPER_GEAR_RATIO);
+  long pos_1 = round(angles.a1);
+  long pos_2 = round(angles.a2 + pos_1 / STEPPER_GEAR_RATIO);
 
   static long steps[2];
   steps[0] = pos_1;
@@ -66,7 +66,7 @@ void execute()
     if (sscanf(line.c_str(), "%d,%d", &x, &y) == 2)
     {
       go_to(x, y);
-      delay(2000);
+      delay(1500);
     }
     else
     {

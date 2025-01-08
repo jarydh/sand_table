@@ -5,6 +5,7 @@ int L = 15; // cm
 // returns angles in degrees
 MotorAngles coord_to_angles(int x, int y)
 {
+    x = -x;
     float r_2 = x * x + y * y;
     MotorAngles res;
 
