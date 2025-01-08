@@ -70,7 +70,7 @@ void go_to(double x, double y)
 // executed on startup after setup() as a script
 void execute()
 {
-  File f = SPIFFS.open("/positions.in");
+  File f = SPIFFS.open("/spiral_points.csv");
 
   while (f.available())
   {
@@ -81,7 +81,7 @@ void execute()
     {
       assert(x * x + y * y <= 1);
       go_to(x, y);
-      delay(1000);
+      delay(10);
     }
     else
     {
