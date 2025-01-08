@@ -37,7 +37,7 @@ void go_to(int x, int y)
 {
   Serial.printf("go to [%d, %d]\n", x, y);
   MotorAngles angles = coord_to_angles(x, y);
-  Serial.printf("\tneed angles: %.2f°, %.2f°\n", angles.a1, angles.a2);
+  Serial.printf("\tneed angles: %.0f°, %.0f°\n", angles.a1, angles.a2);
   long *steps = angles_to_steps(angles);
 
   Serial.printf("\tsend arm 1 to %d\n", steps[0]);

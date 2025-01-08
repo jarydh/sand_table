@@ -2,24 +2,27 @@
 
 int L = 15; // cm
 
+double positiveMod(double a, double b)
+{
+    return fmod(fmod(a, b) + b, b);
+}
+
 // returns angles in degrees
 MotorAngles coord_to_angles(int x, int y)
 {
     x = -x;
-    float r_2 = x * x + y * y;
+    double r_2 = x * x + y * y;
     MotorAngles res;
 
-    float c2 = (r_2 - 2 * L * L) / (2 * L * L);
+    double c2 = (r_2 - 2 * L * L) / (2 * L * L);
     res.a2 = acos(c2);
-    float theta = atan2(y, x);
+    double theta = atan2(y, x);
     res.a1 = theta - atan2(L * sin(res.a2), L + L * c2);
 
     res.a1 *= 180 / PI;
     res.a2 *= 180 / PI;
-    return res;
-}
 
-int positiveMod(int a, int b)
-{
-    return ((a % b) + b) % b;
+    res.a1 = positiveMod(res.a1, 360);
+    res.a2 = positiveMod(res.a2, 360);
+    return res;
 }
