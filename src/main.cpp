@@ -79,6 +79,7 @@ void execute()
 
     if (sscanf(line.c_str(), "%lf,%lf", &x, &y) == 2)
     {
+      assert(x * x + y * y <= 1);
       go_to(x, y);
       delay(1000);
     }
