@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+        }
+
+        canvas {
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="drawingCanvas" width="400" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const points = [];
+        let isDrawing = false;
+        let currentLine = [];
+
+        // Convert canvas coordinates to unit circle coordinates
+        function canvasToUnit(x, y) {
+            return [
+                (x - canvas.width / 2) / (canvas.width / 2),
+                -(y - canvas.height / 2) / (canvas.height / 2)
+            ];
+        }
+
+        // Convert unit circle coordinates to canvas coordinates
+        function unitToCanvas(x, y) {
+            return [
+                x * (canvas.width / 2) + canvas.width / 2,
+                -y * (canvas.height / 2) + canvas.height / 2
+            ];
+        }
+
+        // Draw the unit circle boundary
+        function drawCircle() {
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Sample points evenly along the line
+        function samplePoints(line) {
+            if (line.length < 2) return [];
+
+            const numPoints = 50;
+            const sampledPoints = [];
+            const totalLength = getTotalLength(line);
+            const segmentLength = totalLength / (numPoints - 1);
+
+            let currentDist = 0;
+            let currentIndex = 0;
+
+            for (let i = 0; i < numPoints; i++) {
+                const targetDist = i * segmentLength;
+
+                while (currentIndex < line.length - 1) {
+                    const segDist = distance(line[currentIndex], line[currentIndex + 1]);
+                    if (currentDist + segDist >= targetDist) {
+                        const ratio = (targetDist - currentDist) / segDist;
+                        const x = line[currentIndex][0] + ratio * (line[currentIndex + 1][0] - line[currentIndex][0]);
+                        const y = line[currentIndex][1] + ratio * (line[currentIndex + 1][1] - line[currentIndex][1]);
+                        sampledPoints.push(canvasToUnit(x, y));
+                        break;
+                    }
+                    currentDist += segDist;
+                    currentIndex++;
+                }
+            }
+
+            return sampledPoints;
+        }
+
+        // Calculate total length of the line
+        function getTotalLength(line) {
+            let length = 0;
+            for (let i = 0; i < line.length - 1; i++) {
+                length += distance(line[i], line[i + 1]);
+            }
+            return length;
+        }
+
+        // Calculate distance between two points
+        function distance(p1, p2) {
+            return Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
+        }
+
+        // Draw sampled points
+        function drawPoints(points) {
+            ctx.fillStyle = 'red';
+            points.forEach(point => {
+                const [x, y] = unitToCanvas(point[0], point[1]);
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Check if click is within the circle
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2;
+
+            if (Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2) <= Math.pow(radius, 2)) {
+                isDrawing = true;
+                currentLine = [[x, y]];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawCircle();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDrawing) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Check if mouse is within the circle
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = canvas.width / 2;
+
+            if (Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2) <= Math.pow(radius, 2)) {
+                currentLine.push([x, y]);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawCircle();
+
+                // Draw the line
+                ctx.beginPath();
+                ctx.moveTo(currentLine[0][0], currentLine[0][1]);
+                for (const point of currentLine) {
+                    ctx.lineTo(point[0], point[1]);
+                }
+                ctx.stroke();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (!isDrawing) return;
+            isDrawing = false;
+
+            if (currentLine.length > 1) {
+                const sampledPoints = samplePoints(currentLine);
+                console.log(sampledPoints);
+                drawPoints(sampledPoints);
+            }
+        });
+
+        // Initial circle draw
+        drawCircle();
+    </script>
+</body>
+
+</html>
