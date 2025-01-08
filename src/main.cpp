@@ -11,8 +11,8 @@
 #define SERIAL_PORT 115200
 
 #define STEPS_PER_REV 200
+#define STEPS_PER_DEGREE -1
 #define STEPPER_GEAR_RATIO 1.8
-#define STEPS_PER_RADIAN -STEPS_PER_REV / (2 * PI) * STEPPER_GEAR_RATIO // approx -57
 
 #define START_POSITION 30, 0
 
@@ -22,8 +22,8 @@ MultiStepper steppers;
 
 long *angles_to_steps(MotorAngles angles)
 {
-  long pos_1 = round(angles.a1 * STEPS_PER_RADIAN);
-  long pos_2 = round(angles.a2 * STEPS_PER_RADIAN + pos_1 / STEPPER_GEAR_RATIO);
+  long pos_1 = round(angles.a1 * STEPS_PER_DEGREE);
+  long pos_2 = round(angles.a2 * STEPS_PER_DEGREE + pos_1 / STEPPER_GEAR_RATIO);
 
   static long steps[2];
   steps[0] = pos_1;
@@ -37,7 +37,7 @@ void go_to(int x, int y)
 {
   Serial.printf("go to [%d, %d]\n", x, y);
   MotorAngles angles = coord_to_angles(x, y);
-  Serial.printf("\tneed angles: %.2fπ, %.2fπ\n", angles.a1 / PI, angles.a2 / PI);
+  Serial.printf("\tneed angles: %.2f°, %.2f°\n", angles.a1, angles.a2);
   long *steps = angles_to_steps(angles);
 
   Serial.printf("\tsend arm 1 to %d\n", steps[0]);
@@ -45,6 +45,12 @@ void go_to(int x, int y)
 
   steppers.moveTo(steps);
   steppers.runSpeedToPosition();
+
+  // stepper1.setCurrentPosition(positiveMod(stepper1.currentPosition(), 360));
+  // stepper2.setCurrentPosition(positiveMod(stepper2.currentPosition(), 360));
+
+  // Serial.printf("\tstepper1.currentPosition(): %d\n", stepper1.currentPosition());
+  // Serial.printf("\tstepper2.currentPosition(): %d\n", stepper2.currentPosition());
 }
 
 // executed on startup after setup() as a script

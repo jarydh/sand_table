@@ -2,6 +2,7 @@
 
 int L = 15; // cm
 
+// returns angles in degrees
 MotorAngles coord_to_angles(int x, int y)
 {
     float r_2 = x * x + y * y;
@@ -12,5 +13,12 @@ MotorAngles coord_to_angles(int x, int y)
     float theta = atan2(y, x);
     res.a1 = theta - atan2(L * sin(res.a2), L + L * c2);
 
+    res.a1 *= 180 / PI;
+    res.a2 *= 180 / PI;
     return res;
+}
+
+int positiveMod(int a, int b)
+{
+    return ((a % b) + b) % b;
 }

@@ -20,3 +20,4 @@ typedef struct
 } MotorSteps;
 
 MotorAngles coord_to_angles(int, int);
+int positiveMod(int, int);
