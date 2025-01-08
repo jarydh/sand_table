@@ -20,5 +20,5 @@ typedef struct
     double s2;
 } MotorSteps;
 
-MotorAngles coord_to_angles(int, int);
+MotorAngles coord_to_angles(double, double);
 double positiveMod(double, double);

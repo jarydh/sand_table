@@ -1,6 +1,6 @@
 #include "inverse_kin.h"
 
-int L = 15; // cm
+double L = 0.5; // unitless
 
 double positiveMod(double a, double b)
 {
@@ -8,8 +8,11 @@ double positiveMod(double a, double b)
 }
 
 // returns angles in degrees
-MotorAngles coord_to_angles(int x, int y)
+MotorAngles coord_to_angles(double x, double y)
 {
+    assert(abs(x) <= 1);
+    assert(abs(y) <= 1);
+
     x = -x;
     double r_2 = x * x + y * y;
     MotorAngles res;

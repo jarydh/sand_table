@@ -13,7 +13,7 @@
 #define STEPS_PER_REV 200
 #define STEPPER_GEAR_RATIO 1.8
 
-#define START_POSITION -30, 0
+#define START_POSITION -1, 0
 
 AccelStepper stepper1(AccelStepper::DRIVER, STEP_PIN_1, DIR_PIN_1);
 AccelStepper stepper2(AccelStepper::DRIVER, STEP_PIN_2, DIR_PIN_2);
@@ -47,9 +47,9 @@ long *angles_to_steps(MotorAngles angles)
 }
 
 // sends the arm head to the x,y position
-void go_to(int x, int y)
+void go_to(double x, double y)
 {
-  Serial.printf("go to [%d, %d]\n", x, y);
+  Serial.printf("go to [%0.2f, %0.2f]\n", x, y);
   MotorAngles angles = coord_to_angles(x, y);
   Serial.printf("\tneed angles: %.0f°, %.0f°\n", angles.a1, angles.a2);
   long *steps = angles_to_steps(angles);
@@ -75,9 +75,9 @@ void execute()
   while (f.available())
   {
     String line = f.readStringUntil('\n');
-    int x, y;
+    double x, y;
 
-    if (sscanf(line.c_str(), "%d,%d", &x, &y) == 2)
+    if (sscanf(line.c_str(), "%lf,%lf", &x, &y) == 2)
     {
       go_to(x, y);
       delay(1000);
