@@ -21,11 +21,7 @@ MultiStepper steppers;
 
 long *angles_to_steps(MotorAngles angles)
 {
-  // long pos_1 = round(angles.a1);
-  // long pos_2 = round(angles.a2);
-
-  // recalculate the angles to the closest
-
+  // recalculate the a1 to the closest
   if (angles.a1 - stepper1.currentPosition() > 180)
   {
     angles.a1 -= 360;
@@ -34,12 +30,18 @@ long *angles_to_steps(MotorAngles angles)
   {
     angles.a1 += 360;
   }
-
   assert(abs(stepper1.currentPosition() - angles.a1) <= 180);
 
+  long pos_1 = round(angles.a1);
+  long delta = pos_1 - stepper1.currentPosition();
+
+  double drift = delta / STEPPER_GEAR_RATIO;
+
+  long pos_2 = round(drift + angles.a2);
+
   static long steps[2];
-  steps[0] = round(angles.a1);
-  steps[1] = round(angles.a2);
+  steps[0] = pos_1;
+  steps[1] = pos_2;
 
   return steps;
 }
@@ -58,8 +60,8 @@ void go_to(int x, int y)
   steppers.moveTo(steps);
   steppers.runSpeedToPosition();
 
-  // stepper1.setCurrentPosition(positiveMod(stepper1.currentPosition(), 360));
-  // stepper2.setCurrentPosition(positiveMod(stepper2.currentPosition(), 360));
+  stepper1.setCurrentPosition(positiveMod(angles.a1, 360));
+  stepper2.setCurrentPosition(positiveMod(angles.a2, 360));
 
   // Serial.printf("\tstepper1.currentPosition(): %d\n", stepper1.currentPosition());
   // Serial.printf("\tstepper2.currentPosition(): %d\n", stepper2.currentPosition());
