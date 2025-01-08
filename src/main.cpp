@@ -14,6 +14,7 @@
 #define STEPPER_GEAR_RATIO 1.8
 
 #define START_POSITION -1, 0
+#define FILE_NAME "/positions.in"
 
 AccelStepper stepper1(AccelStepper::DRIVER, STEP_PIN_1, DIR_PIN_1);
 AccelStepper stepper2(AccelStepper::DRIVER, STEP_PIN_2, DIR_PIN_2);
@@ -60,17 +61,19 @@ void go_to(double x, double y)
   steppers.moveTo(steps);
   steppers.runSpeedToPosition();
 
-  stepper1.setCurrentPosition(positiveMod(angles.a1, 360));
-  stepper2.setCurrentPosition(positiveMod(angles.a2, 360));
-
-  // Serial.printf("\tstepper1.currentPosition(): %d\n", stepper1.currentPosition());
-  // Serial.printf("\tstepper2.currentPosition(): %d\n", stepper2.currentPosition());
+  stepper1.setCurrentPosition(round(positiveMod(angles.a1, 360)));
+  stepper2.setCurrentPosition(round(positiveMod(angles.a2, 360)));
 }
 
 // executed on startup after setup() as a script
 void execute()
 {
-  File f = SPIFFS.open("/spiral_points.csv");
+  File f = SPIFFS.open(FILE_NAME);
+  if (!f.size() > 0)
+  {
+    Serial.printf("❌\tFailed to open file '%s'\n", FILE_NAME);
+    return;
+  }
 
   while (f.available())
   {
@@ -81,7 +84,7 @@ void execute()
     {
       assert(x * x + y * y <= 1);
       go_to(x, y);
-      delay(10);
+      delay(500);
     }
     else
     {
