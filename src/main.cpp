@@ -11,7 +11,6 @@
 #define SERIAL_PORT 115200
 
 #define STEPS_PER_REV 200
-// #define STEPS_PER_DEGREE -1
 #define STEPPER_GEAR_RATIO 1.8
 
 #define START_POSITION -30, 0
@@ -22,12 +21,25 @@ MultiStepper steppers;
 
 long *angles_to_steps(MotorAngles angles)
 {
-  long pos_1 = round(angles.a1);
-  long pos_2 = round(angles.a2 + pos_1 / STEPPER_GEAR_RATIO);
+  // long pos_1 = round(angles.a1);
+  // long pos_2 = round(angles.a2);
+
+  // recalculate the angles to the closest
+
+  if (angles.a1 - stepper1.currentPosition() > 180)
+  {
+    angles.a1 -= 360;
+  }
+  if (stepper1.currentPosition() - angles.a1 > 180)
+  {
+    angles.a1 += 360;
+  }
+
+  assert(abs(stepper1.currentPosition() - angles.a1) <= 180);
 
   static long steps[2];
-  steps[0] = pos_1;
-  steps[1] = pos_2;
+  steps[0] = round(angles.a1);
+  steps[1] = round(angles.a2);
 
   return steps;
 }
@@ -66,7 +78,7 @@ void execute()
     if (sscanf(line.c_str(), "%d,%d", &x, &y) == 2)
     {
       go_to(x, y);
-      delay(1500);
+      delay(1000);
     }
     else
     {
@@ -91,10 +103,10 @@ void setup()
     return;
   }
 
-  stepper1.setMaxSpeed(50);
-  stepper1.setSpeed(50);
-  stepper2.setMaxSpeed(50);
-  stepper2.setSpeed(50);
+  stepper1.setMaxSpeed(80);
+  stepper1.setSpeed(80);
+  stepper2.setMaxSpeed(80);
+  stepper2.setSpeed(80);
 
   steppers.addStepper(stepper1);
   steppers.addStepper(stepper2);
