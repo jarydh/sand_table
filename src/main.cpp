@@ -27,14 +27,7 @@ MultiStepper steppers;
 long *angles_to_steps(MotorAngles angles)
 {
   int pos_1 = round(angles.a1 * STEPS_PER_RADIAN);
-
-  // counteract drift
-  float delta1 = pos_1 - stepper1.currentPosition();
-  int arm_2_drift = round(delta1 / STEPPER_GEAR_RATIO);
-  float pos_2 = stepper2.currentPosition() + arm_2_drift;
-
-  // apply desired position (relative to arm 1)
-  pos_2 += round(angles.a2 * STEPS_PER_RADIAN);
+  int pos_2 = round(angles.a2 * STEPS_PER_RADIAN + pos_1 / STEPPER_GEAR_RATIO);
 
   static long steps[2];
   steps[0] = pos_1;
@@ -50,15 +43,27 @@ void go_to(int x, int y)
   Serial.printf("\tneed angles (%.2fπ, %.2fπ)\n", angles.a1 / PI, angles.a2 / PI);
   long *steps = angles_to_steps(angles); // problem lies here
 
+  // steps[1] = -90;
+  Serial.printf("\tsend arm 1 to %d\n", steps[0]);
+  Serial.printf("\tsend arm 2 to %d\n", steps[1]);
+
   steppers.moveTo(steps);
   steppers.runSpeedToPosition();
 }
 
 void execute()
 {
-  go_to(15, 15);
-  delay(3000);
   go_to(0, 30);
+  delay(2000);
+  go_to(-15, 15);
+  delay(2000);
+  go_to(30, 0);
+  delay(2000);
+  go_to(-15, -15);
+  delay(2000);
+  go_to(15, -15);
+  delay(2000);
+  go_to(0, 0);
 }
 
 void setup()
@@ -72,12 +77,14 @@ void setup()
   pinMode(dirPin2, OUTPUT);
 
   stepper1.setMaxSpeed(50);
-  stepper1.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
-  stepper1.setAcceleration(10);
+  stepper1.setSpeed(50);
+  // stepper1.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
+  // stepper1.setAcceleration(10);
 
   stepper2.setMaxSpeed(50);
-  stepper2.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
-  stepper2.setAcceleration(10);
+  stepper2.setSpeed(50);
+  // stepper2.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
+  // stepper2.setAcceleration(10);
 
   steppers.addStepper(stepper1);
   steppers.addStepper(stepper2);
