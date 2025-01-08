@@ -24,7 +24,7 @@ AccelStepper stepper1(AccelStepper::DRIVER, stepPin1, dirPin1);
 AccelStepper stepper2(AccelStepper::DRIVER, stepPin2, dirPin2);
 MultiStepper steppers;
 
-void set_target_position(int x, int y)
+long *coord_to_steps(int x, int y)
 {
   Coordinate coord;
   coord.x = x;
@@ -48,21 +48,25 @@ void set_target_position(int x, int y)
   Serial.printf("pos_1 final: %d\n", pos_1);
   Serial.printf("pos_2 final: %d\n", pos_2);
 
-  long steps[2];
+  static long steps[2];
   steps[0] = pos_1;
   steps[1] = pos_2;
-  steppers.moveTo(steps);
+
+  return steps;
+}
+
+void go_to(int x, int y)
+{
+  long *t = coord_to_steps(x, y);
+  Serial.printf("t[0]: %d t[1]: %d\n", t[0], t[1]);
+
+  steppers.moveTo(t);
+  steppers.runSpeedToPosition();
 }
 
 void execute()
 {
-  set_target_position(0, 30);
-  steppers.runSpeedToPosition();
-
-  delay(2000);
-
-  set_target_position(15, 15);
-  steppers.runSpeedToPosition();
+  go_to(15, 15);
 }
 
 void setup()
@@ -86,13 +90,20 @@ void setup()
   steppers.addStepper(stepper1);
   steppers.addStepper(stepper2);
 
-  Serial.println("done setup, executing movements in 2 seconds:");
+  Serial.println("\n\n🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸\n\n");
 
+  Serial.println("done setup, executing movements");
+  execute();
+  Serial.println("done executing movements.");
   delay(2000);
 
-  execute();
-
-  Serial.println("done executing movements.");
+  Serial.println("resetting");
+  long steps[2];
+  steps[0] = 0;
+  steps[1] = 0;
+  steppers.moveTo(steps);
+  steppers.runSpeedToPosition();
+  Serial.println("\n\n🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸\n\n");
 }
 
 void loop() {}
