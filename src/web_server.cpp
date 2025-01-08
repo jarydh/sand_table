@@ -7,6 +7,8 @@
 // // Create AsyncWebServer object on port 80
 // AsyncWebServer server(80);
 
+// String ledState;
+
 // Replaces placeholder with LED state value
 // String processor(const String &var)
 // {
