@@ -9,8 +9,8 @@ typedef struct
 
 typedef struct
 {
-    float t1;
-    float t2;
+    float a1;
+    float a2;
 } MotorAngles;
 
 typedef struct
@@ -19,4 +19,4 @@ typedef struct
     float s2;
 } MotorSteps;
 
-MotorAngles coord_to_angles(Coordinate c);
+MotorAngles coord_to_angles(int, int);

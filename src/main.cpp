@@ -24,29 +24,17 @@ AccelStepper stepper1(AccelStepper::DRIVER, stepPin1, dirPin1);
 AccelStepper stepper2(AccelStepper::DRIVER, stepPin2, dirPin2);
 MultiStepper steppers;
 
-long *coord_to_steps(int x, int y)
+long *angles_to_steps(MotorAngles angles)
 {
-  Coordinate coord;
-  coord.x = x;
-  coord.y = y;
-  MotorAngles angles = coord_to_angles(coord);
-  Serial.printf("angle 1: %f\n", angles.t1);
-  Serial.printf("angle 2: %f\n", angles.t2);
-
-  int pos_1 = round(angles.t1 * STEPS_PER_RADIAN);
+  int pos_1 = round(angles.a1 * STEPS_PER_RADIAN);
 
   // counteract drift
   float delta1 = pos_1 - stepper1.currentPosition();
   int arm_2_drift = round(delta1 / STEPPER_GEAR_RATIO);
   float pos_2 = stepper2.currentPosition() + arm_2_drift;
 
-  Serial.printf("pos_2 drift compensation: %d\n", pos_2);
-
   // apply desired position (relative to arm 1)
-  pos_2 += round(angles.t2 * STEPS_PER_RADIAN);
-
-  Serial.printf("pos_1 final: %d\n", pos_1);
-  Serial.printf("pos_2 final: %d\n", pos_2);
+  pos_2 += round(angles.a2 * STEPS_PER_RADIAN);
 
   static long steps[2];
   steps[0] = pos_1;
@@ -57,16 +45,20 @@ long *coord_to_steps(int x, int y)
 
 void go_to(int x, int y)
 {
-  long *t = coord_to_steps(x, y);
-  Serial.printf("t[0]: %d t[1]: %d\n", t[0], t[1]);
+  Serial.printf("go_to(%d, %d)\n", x, y);
+  MotorAngles angles = coord_to_angles(x, y);
+  Serial.printf("\tneed angles (%.2fπ, %.2fπ)\n", angles.a1 / PI, angles.a2 / PI);
+  long *steps = angles_to_steps(angles); // problem lies here
 
-  steppers.moveTo(t);
+  steppers.moveTo(steps);
   steppers.runSpeedToPosition();
 }
 
 void execute()
 {
   go_to(15, 15);
+  delay(3000);
+  go_to(0, 30);
 }
 
 void setup()
