@@ -56,6 +56,10 @@ void execute()
   go_to(0, 0);
   delay(2000);
   go_to(0, 15);
+  delay(2000);
+  go_to(-15, 0);
+  delay(2000);
+  go_to(0, -15);
 }
 
 void setup()
