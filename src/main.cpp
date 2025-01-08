@@ -38,7 +38,7 @@ long *angles_to_steps(MotorAngles angles)
 
 void go_to(int x, int y)
 {
-  Serial.printf("go_to(%d, %d)\n", x, y);
+  Serial.printf("go to (%d, %d)\n", x, y);
   MotorAngles angles = coord_to_angles(x, y);
   Serial.printf("\tneed angles (%.2fπ, %.2fπ)\n", angles.a1 / PI, angles.a2 / PI);
   long *steps = angles_to_steps(angles); // problem lies here
@@ -53,17 +53,13 @@ void go_to(int x, int y)
 
 void execute()
 {
-  go_to(0, 30);
-  delay(2000);
-  go_to(-15, 15);
-  delay(2000);
-  go_to(30, 0);
-  delay(2000);
   go_to(-15, -15);
   delay(2000);
   go_to(15, -15);
   delay(2000);
   go_to(0, 0);
+  delay(2000);
+  go_to(0, 15);
 }
 
 void setup()
@@ -78,13 +74,9 @@ void setup()
 
   stepper1.setMaxSpeed(50);
   stepper1.setSpeed(50);
-  // stepper1.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
-  // stepper1.setAcceleration(10);
 
   stepper2.setMaxSpeed(50);
   stepper2.setSpeed(50);
-  // stepper2.moveTo(STEPS_PER_REV * STEPPER_GEAR_RATIO);
-  // stepper2.setAcceleration(10);
 
   steppers.addStepper(stepper1);
   steppers.addStepper(stepper2);
@@ -97,11 +89,7 @@ void setup()
   delay(2000);
 
   Serial.println("resetting");
-  long steps[2];
-  steps[0] = 0;
-  steps[1] = 0;
-  steppers.moveTo(steps);
-  steppers.runSpeedToPosition();
+  go_to(30, 0);
   Serial.println("\n\n🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸\n\n");
 }
 
