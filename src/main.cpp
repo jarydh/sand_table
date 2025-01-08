@@ -1,6 +1,7 @@
 #include <AccelStepper.h>
 #include <MultiStepper.h>
 #include "inverse_kin.h"
+#include "SPIFFS.h"
 
 #define LED_PIN 22
 #define STEP_PIN_1 12
@@ -34,9 +35,9 @@ long *angles_to_steps(MotorAngles angles)
 // sends the arm head to the x,y position
 void go_to(int x, int y)
 {
-  Serial.printf("go to (%d, %d)\n", x, y);
+  Serial.printf("go to [%d, %d]\n", x, y);
   MotorAngles angles = coord_to_angles(x, y);
-  Serial.printf("\tneed angles (%.2fπ, %.2fπ)\n", angles.a1 / PI, angles.a2 / PI);
+  Serial.printf("\tneed angles: %.2fπ, %.2fπ\n", angles.a1 / PI, angles.a2 / PI);
   long *steps = angles_to_steps(angles);
 
   Serial.printf("\tsend arm 1 to %d\n", steps[0]);
@@ -49,17 +50,26 @@ void go_to(int x, int y)
 // executed on startup after setup() as a script
 void execute()
 {
-  go_to(-15, -15);
-  delay(2000);
-  go_to(15, -15);
-  delay(2000);
-  go_to(0, 0);
-  delay(2000);
-  go_to(0, 15);
-  delay(2000);
-  go_to(-15, 0);
-  delay(2000);
-  go_to(0, -15);
+
+  File f = SPIFFS.open("/style.css");
+
+  while (f.available())
+  {
+    String line = f.readStringUntil('\n');
+    int x, y;
+
+    if (sscanf(line.c_str(), "%d,%d", &x, &y) == 2)
+    {
+      Serial.printf("Parsed values: %d, %d\n", x, y);
+      go_to(x, y);
+      delay(2000);
+    }
+    else
+    {
+      Serial.printf("Skipping invalid line: %s\n", line.c_str());
+    }
+  }
+  f.close();
 }
 
 void setup()
@@ -70,6 +80,13 @@ void setup()
   pinMode(DIR_PIN_1, OUTPUT);
   pinMode(STEP_PIN_2, OUTPUT);
   pinMode(DIR_PIN_2, OUTPUT);
+
+  // Initialize SPIFFS
+  if (!SPIFFS.begin(true))
+  {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
 
   stepper1.setMaxSpeed(50);
   stepper1.setSpeed(50);
