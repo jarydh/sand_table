@@ -22,7 +22,7 @@ MultiStepper steppers;
 
 long *angles_to_steps(MotorAngles angles)
 {
-  // recalculate the a1 to the closest
+  // recalculate a1 to the closest equivalent angle
   if (angles.a1 - stepper1.currentPosition() > 180)
   {
     angles.a1 -= 360;
@@ -47,7 +47,7 @@ long *angles_to_steps(MotorAngles angles)
   return steps;
 }
 
-// sends the arm head to the x,y position
+// sends the arm head to the x, y position
 void go_to(double x, double y)
 {
   Serial.printf("go to [%0.2f, %0.2f]\n", x, y);
@@ -61,6 +61,7 @@ void go_to(double x, double y)
   steppers.moveTo(steps);
   steppers.runSpeedToPosition();
 
+  // reset the motors frame of reference
   stepper1.setCurrentPosition(round(positiveMod(angles.a1, 360)));
   stepper2.setCurrentPosition(round(positiveMod(angles.a2, 360)));
 }
