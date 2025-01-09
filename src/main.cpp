@@ -1,8 +1,11 @@
-#include <AccelStepper.h>
-#include <MultiStepper.h>
-#include "inverse_kin.h"
 #include "SPIFFS.h"
-#include "web_server.h"
+// #include "stepper_control.h"
+#include "WiFi.h"
+#include "WifiManager.h"
+#include "ESPAsyncWebServer.h"
+
+// Create AsyncWebServer object on port 80
+AsyncWebServer server(80);
 
 #define LED_PIN 22
 #define STEP_PIN_1 12
@@ -17,85 +20,6 @@
 #define START_POSITION -1, 0
 #define FILE_NAME "/positions.in"
 
-AccelStepper stepper1(AccelStepper::DRIVER, STEP_PIN_1, DIR_PIN_1);
-AccelStepper stepper2(AccelStepper::DRIVER, STEP_PIN_2, DIR_PIN_2);
-MultiStepper steppers;
-
-long *angles_to_steps(MotorAngles angles)
-{
-  // recalculate a1 to the closest equivalent angle
-  if (angles.a1 - stepper1.currentPosition() > 180)
-  {
-    angles.a1 -= 360;
-  }
-  if (stepper1.currentPosition() - angles.a1 > 180)
-  {
-    angles.a1 += 360;
-  }
-  assert(abs(stepper1.currentPosition() - angles.a1) <= 180);
-
-  long pos_1 = round(angles.a1);
-  long delta = pos_1 - stepper1.currentPosition();
-
-  double drift = delta / STEPPER_GEAR_RATIO;
-
-  long pos_2 = round(drift + angles.a2);
-
-  static long steps[2];
-  steps[0] = pos_1;
-  steps[1] = pos_2;
-
-  return steps;
-}
-
-// sends the arm head to the x, y position
-void go_to(double x, double y)
-{
-  Serial.printf("go to [%0.2f, %0.2f]\n", x, y);
-  MotorAngles angles = coord_to_angles(x, y);
-  Serial.printf("\tneed angles: %.0f°, %.0f°\n", angles.a1, angles.a2);
-  long *steps = angles_to_steps(angles);
-
-  Serial.printf("\tsend arm 1 to %d\n", steps[0]);
-  Serial.printf("\tsend arm 2 to %d\n", steps[1]);
-
-  steppers.moveTo(steps);
-  steppers.runSpeedToPosition();
-
-  // reset the motors frame of reference
-  stepper1.setCurrentPosition(round(positiveMod(angles.a1, 360)));
-  stepper2.setCurrentPosition(round(positiveMod(angles.a2, 360)));
-}
-
-// executed on startup after setup() as a script
-void execute()
-{
-  File f = SPIFFS.open(FILE_NAME);
-  if (!f.size() > 0)
-  {
-    Serial.printf("❌\tFailed to open file '%s'\n", FILE_NAME);
-    return;
-  }
-
-  while (f.available())
-  {
-    String line = f.readStringUntil('\n');
-    double x, y;
-
-    if (sscanf(line.c_str(), "%lf,%lf", &x, &y) == 2)
-    {
-      assert(x * x + y * y <= 1);
-      go_to(x, y);
-      delay(200);
-    }
-    else
-    {
-      Serial.printf("Skipping invalid line: %s\n", line.c_str());
-    }
-  }
-  f.close();
-}
-
 void setup()
 {
   Serial.begin(SERIAL_PORT);
@@ -108,31 +32,85 @@ void setup()
   if (!SPIFFS.begin(true))
   {
     Serial.println("An Error has occurred while mounting SPIFFS");
-    return;
   }
 
-  init_webserver();
+  Serial.println("initting websierver");
+  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+  WiFiManager wm;
 
-  return;
+  bool res;
+  res = wm.autoConnect("AutoConnectAP", "password"); // password protected ap
 
-  stepper1.setMaxSpeed(80);
-  stepper1.setSpeed(80);
-  stepper2.setMaxSpeed(80);
-  stepper2.setSpeed(80);
+  if (!res)
+  {
+    Serial.println("Failed to connect");
+  }
+  else
+  {
+    Serial.println("Connected to wifi");
+  }
 
-  steppers.addStepper(stepper1);
-  steppers.addStepper(stepper2);
+  // Print ESP32 Local IP Address
+  Serial.printf("http://%s\n", WiFi.localIP().toString());
 
-  Serial.println("\n\n🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸\n\n");
-  Serial.println("done setup, executing movements");
+  // Route for root / web page
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(SPIFFS, "/index.html", String(), false); 
+            Serial.println("served '/index.html'"); });
 
-  execute();
+  // Modified POST handler with body parsing
+  server.on("/api/draw", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+              // This handler will be called when the body is complete
+              request->send(200);
+              //
+            },
+            NULL,
+            //
+            // Handler for body data
+            [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+            {
+              Serial.println("Handling body");
+              String body = String((char *)data).substring(0, len);
+              double x, y;
+              int i = 0, j = 0;
+              char ch;
+              while (j <= body.length())
+              {
+                ch = body.charAt(j);
+                if (ch == ',')
+                {
+                  x = body.substring(i, j).toDouble();
+                  // Serial.printf("found '%c' at %d. Slicing out %.4lf\n", ch, j, x);
+                  i = j + 1;
+                }
+                if (ch == '\n' || ch == '\0')
+                {
+                  y = body.substring(i, j).toDouble();
+                  // Serial.printf("found '%c' at %d. Slicing out %.4lf\n", ch, j, y);
+                  i = j + 1;
+                  Serial.printf("%lf,%lf\n", x, y);
+                }
+                j++;
+              }
+              // Create a buffer to store the body data as a string
+              // char *buf = (char*)malloc(len + 1);
+              // memcpy(buf, data, len);
+              // buf[len] = '\0';
 
-  Serial.println("done executing movements.");
-  delay(2000);
-  Serial.println("resetting");
-  go_to(START_POSITION);
-  Serial.println("\n\n🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸🐸\n\n");
+              // Print the received data
+              // Serial.print("Received body data: ");
+              // Serial.println(buf);
+              // Serial.print("Chunk index: ");
+              // Serial.println(index);
+              // Serial.print("Total length: ");
+              // Serial.println(total);
+
+              // free(buf);
+            });
+
+  // Start server
+  server.begin();
 }
 
 void loop() {}
