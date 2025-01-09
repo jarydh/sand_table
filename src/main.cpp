@@ -173,9 +173,9 @@ void loop()
   {
     Coordinate c = q.front();
     go_to(c.x, c.y);
-    delay(1000);
+    delay(500);
     q.pop();
-    
+
     if (q.empty())
       go_to(START_POSITION);
   }
