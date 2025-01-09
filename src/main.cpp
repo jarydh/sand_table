@@ -2,6 +2,7 @@
 #include <MultiStepper.h>
 #include "inverse_kin.h"
 #include "SPIFFS.h"
+#include "web_server.h"
 
 #define LED_PIN 22
 #define STEP_PIN_1 12
@@ -85,7 +86,7 @@ void execute()
     {
       assert(x * x + y * y <= 1);
       go_to(x, y);
-      delay(500);
+      delay(200);
     }
     else
     {
@@ -110,6 +111,10 @@ void setup()
     return;
   }
 
+  init_webserver();
+
+  return;
+  
   stepper1.setMaxSpeed(80);
   stepper1.setSpeed(80);
   stepper2.setMaxSpeed(80);
