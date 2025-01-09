@@ -3,6 +3,7 @@
 #include <MultiStepper.h>
 #include "stepper_control.h"
 #include "inverse_kin.h"
+#include <queue>
 
 #include "WiFi.h"
 #include "WifiManager.h"
@@ -22,6 +23,7 @@
 #define START_POSITION -1, 0
 
 AsyncWebServer server(80);
+std::queue<Coordinate> q;
 
 AccelStepper stepper1(AccelStepper::DRIVER, STEP_PIN_1, DIR_PIN_1);
 AccelStepper stepper2(AccelStepper::DRIVER, STEP_PIN_2, DIR_PIN_2);
@@ -141,12 +143,13 @@ void setup()
                   y = body.substring(i, j).toDouble();
                   i = j + 1;
                   Serial.printf("%lf,%lf\n", x, y);
-                  go_to(x, y);
-                  delay(500);
+                  Coordinate c;
+                  c.x=x;
+                  c.y=y;
+                  q.push(c);
                 }
                 j++;
-              }
-              go_to(START_POSITION); });
+              } });
 
   // Start server
   server.begin();
@@ -164,4 +167,13 @@ void setup()
   steppers.addStepper(stepper2);
 }
 
-void loop() {}
+void loop()
+{
+  while (!q.empty())
+  {
+    Coordinate c = q.front();
+    go_to(c.x, c.y);
+    delay(1000);
+    q.pop();
+  }
+}
