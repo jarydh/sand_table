@@ -94,10 +94,10 @@
         clientY = e.clientY;
       }
 
-      const x = (clientX - rect.left) * scaleX;
-      const y = (clientY - rect.top) * scaleY;
-
-      return [x, y];
+      return [
+        (clientX - rect.left) * scaleX,
+        (clientY - rect.top) * scaleY
+      ];
     }
 
     function isInCircle(x, y) {
@@ -141,6 +141,12 @@
       for (let i = 0; i < numPoints; i++) {
         const targetDist = i * segmentLength;
 
+        // Always include the first point
+        if (i === 0) {
+          sampledPoints.push(canvasToUnit(line[0][0], line[0][1]));
+          continue;
+        }
+
         while (currentIndex < line.length - 1) {
           const segDist = distance(line[currentIndex], line[currentIndex + 1]);
           if (currentDist + segDist >= targetDist) {
@@ -153,6 +159,11 @@
           currentDist += segDist;
           currentIndex++;
         }
+      }
+
+      // Always include the last point
+      if (sampledPoints.length < numPoints) {
+        sampledPoints.push(canvasToUnit(line[line.length - 1][0], line[line.length - 1][1]));
       }
 
       return sampledPoints;
