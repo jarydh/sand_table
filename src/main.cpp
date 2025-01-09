@@ -4,28 +4,9 @@
 #include "stepper_control.h"
 #include "inverse_kin.h"
 
-#define LED_PIN 22
-#define STEP_PIN_1 12
-#define DIR_PIN_1 14
-#define STEP_PIN_2 26
-#define DIR_PIN_2 27
-#define STEPS_PER_REV 200
-#define STEPPER_GEAR_RATIO 1.8
-
-#define START_POSITION -1, 0
-#define FILE_NAME "/positions.in"
-
-AccelStepper stepper1(AccelStepper::DRIVER, STEP_PIN_1, DIR_PIN_1);
-AccelStepper stepper2(AccelStepper::DRIVER, STEP_PIN_2, DIR_PIN_2);
-MultiStepper steppers;
-#include "SPIFFS.h"
-// #include "stepper_control.h"
 #include "WiFi.h"
 #include "WifiManager.h"
 #include "ESPAsyncWebServer.h"
-
-// Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
 
 #define LED_PIN 22
 #define STEP_PIN_1 12
@@ -36,9 +17,15 @@ AsyncWebServer server(80);
 
 #define STEPS_PER_REV 200
 #define STEPPER_GEAR_RATIO 1.8
-
+#define STEPS_PER_REV 200
+#define STEPPER_GEAR_RATIO 1.8
 #define START_POSITION -1, 0
-#define FILE_NAME "/positions.in"
+
+AsyncWebServer server(80);
+
+AccelStepper stepper1(AccelStepper::DRIVER, STEP_PIN_1, DIR_PIN_1);
+AccelStepper stepper2(AccelStepper::DRIVER, STEP_PIN_2, DIR_PIN_2);
+MultiStepper steppers;
 
 long *angles_to_steps(MotorAngles angles)
 {
